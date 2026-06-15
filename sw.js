@@ -2,7 +2,9 @@
    sw.js — سرویس‌ورکر (آفلاین)
 ═══════════════════════════════════════ */
 
-const CACHE_NAME = 'myplan-v1';
+// هر بار که آپدیت مهمی دادی، این عدد رو زیاد کن (v2, v3, ...)
+// تا کش قدیمی پاک بشه و نسخه‌ی جدید لود شه
+const CACHE_NAME = 'myplan-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -35,18 +37,17 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
+// استراتژی: اول شبکه (network-first) — همیشه آخرین نسخه رو می‌گیره
+// و فقط وقتی آفلاینی، از کش استفاده می‌کنه
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        if (res && res.status === 200 && res.type === 'basic') {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        }
-        return res;
-      }).catch(() => cached);
-    })
+    fetch(e.request).then(res => {
+      if (res && res.status === 200 && res.type === 'basic') {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+      }
+      return res;
+    }).catch(() => caches.match(e.request))
   );
 });
