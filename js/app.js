@@ -302,7 +302,7 @@ function renderDet(i) {
   if (isDone) {
     const donTag = document.createElement('span');
     donTag.className='dtag'; donTag.style.cssText='background:rgba(34,201,104,.12);color:var(--grn);border-color:rgba(34,201,104,.28)';
-    donTag.textContent='✅ روز کامل جذاب';
+    donTag.textContent='✅ روز کامل';
     dtags.appendChild(donTag);
   }
 
@@ -323,7 +323,7 @@ function renderDet(i) {
   if (gym) {
     const gymPlanBtn = document.createElement('button');
     gymPlanBtn.className = 'tbtn tgy2';
-    gymPlanBtn.textContent = '💪 برنامه باشگاه رونی کلمن';
+    gymPlanBtn.textContent = '💪 برنامه باشگاه';
     gymPlanBtn.onclick = () => openGymPlan(i);
     tbar.appendChild(gymPlanBtn);
   }
@@ -357,7 +357,7 @@ function renderDet(i) {
       <input class="ainp" id="anew_time_${i}" placeholder="ساعت (مثلاً ۸:۰۰)">
     </div>
     <input class="ainp" id="anew_t_${i}" placeholder="عنوان کار...">
-    <input class="ainp" id="anew_s_${i}" placeholder="توضیح (اختیاری ریز بدی بد نی)">
+    <input class="ainp" id="anew_s_${i}" placeholder="توضیح (اختیاری)">
     <div class="arbtns">
       <button class="addbtn" onclick="addItem(${i})">اضافه کن</button>
       <button class="ccl" onclick="togAddRow(${i})">انصراف</button>
@@ -522,7 +522,7 @@ function renderDet(i) {
   const donebtn = document.createElement('button');
   donebtn.className = 'donebtn ' + (isDone ? 'on' : 'off');
   donebtn.id = 'donebtn_' + i;
-  donebtn.textContent = isDone ? '✅ روز کامل شد!' : '✓ روز رو کامل کن خوشتیپ';
+  donebtn.textContent = isDone ? '✅ روز کامل شد!' : '✓ روز رو کامل کن';
   donebtn.onclick = () => togDone(i);
   right.appendChild(donebtn);
 
@@ -542,7 +542,7 @@ function renderDet(i) {
 // ── OPEN GYM PLAN MODAL ──
 function openGymPlan(i) {
   const gymPlan = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
-  document.getElementById('mTitle').textContent = '💪 برنامه باشگاه رونی کلمن';
+  document.getElementById('mTitle').textContent = '💪 برنامه باشگاه';
   const body = document.getElementById('mBody');
   body.innerHTML = '';
 
@@ -701,7 +701,7 @@ function togDone(i) {
   const btn = document.getElementById('donebtn_' + i);
   if (btn) {
     btn.className = 'donebtn ' + (cur ? 'off' : 'on');
-    btn.textContent = cur ? '✓ روز رو کامل کن' : '✅ روز کامل شد خوشتیپ!';
+    btn.textContent = cur ? '✓ روز رو کامل کن' : '✅ روز کامل شد!';
   }
   if (!cur) spawnConf(btn || document.body);
   updOverall();
@@ -830,3 +830,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 60000);
 });
+
