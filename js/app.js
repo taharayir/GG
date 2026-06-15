@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   app.js — منطق اصلی
+   app.js — منطق اصلی (نسخه اصلاح‌شده)
 ═══════════════════════════════════════ */
 
 'use strict';
@@ -48,7 +48,7 @@ function updWUI(n) {
   if (wn) wn.textContent = n;
   if (wml) wml.textContent = (n * 250) + ' ml';
   if (wbar) wbar.style.width = (n / 8 * 100) + '%';
-  if (wstat) wstat.textContent = n >= 8 ? '✅ هدف رسیدی!' : 'هدف: ۸ لیوان';
+  if (wstat) wstat.textContent = n >= 8 ? '🏆 هدف فتح شد!' : 'هدف: ۸ لیوان';
 }
 
 // ── QUOTE ENGINE ──
@@ -99,16 +99,6 @@ function getTodayIndex() {
   return Math.max(0, diff);
 }
 
-// ── TODAY BANNER (خانه) ──
-function updTodayBanner() {
-  const idx = getTodayIndex();
-  const pd = getPD(idx);
-  const dow = gDow(idx);
-  const year = pd.m === 'فروردین' ? 1406 : 1405;
-  const txt = document.getElementById('todayTxt');
-  if (txt) txt.textContent = `امروز — ${DN[dow]} ${pd.d} ${pd.m} ${year}`;
-}
-
 // ── OVERALL PROGRESS ──
 function updOverall() {
   const total = getTotalDays();
@@ -128,9 +118,9 @@ function updOverall() {
   const cafeCount = document.getElementById('cafeCount');
   const totalDaysEl = document.getElementById('totalDays');
   if (rfg) { const c = 2*Math.PI*44; rfg.style.strokeDasharray=c; rfg.style.strokeDashoffset=c*(1-pct/100); }
-  if (rnum) rnum.innerHTML = `<span>${pct}٪</span><small>کامل</small>`;
+  if (rnum) rnum.innerHTML = `<span>${pct}٪</span><small>تکمیل‌شده</small>`;
   if (ovbar) ovbar.style.width = pct + '%';
-  if (ovsub) ovsub.textContent = done + ' روز کامل';
+  if (ovsub) ovsub.textContent = done + ' روز درخشان';
   if (hCount) hCount.textContent = done;
   if (gymCount) gymCount.textContent = gymDone;
   if (cafeCount) cafeCount.textContent = partyDone;
@@ -209,6 +199,16 @@ function selDay(i) {
   document.getElementById('detPanel').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
+// ── GET SCHEDULE ITEMS ──
+// برمیگردونه آرایه آیتم‌های برنامه روز (بدون آیتم‌های ثابت باشگاه/پارتی)
+function getCustomItems(i) {
+  const ct = JSON.parse(localStorage.getItem('ct_' + i) || '[]');
+  return ct.map(raw => {
+    const parts = raw.split('|');
+    return { t: parts[0] || '', s: parts[1] || '', time: parts[2] || '', e: parts[3] || '📌' };
+  });
+}
+
 function renderDet(i) {
   const panel = document.getElementById('detPanel');
   if (!panel) return;
@@ -241,10 +241,10 @@ function renderDet(i) {
 
   const ddate = document.createElement('div'); ddate.className='ddate'; ddate.textContent=pd.d+' '+pd.m;
   const dday = document.createElement('div'); dday.className='dday';
-  dday.innerHTML = DN[dow] + (isToday ? ' · <span style="color:var(--gold)">امروز</span>' : '');
+  dday.innerHTML = DN[dow] + (isToday ? ' · <span style="color:var(--gold)">✨ امروز</span>' : '');
   const dtags = document.createElement('div'); dtags.className='dtags';
 
-  // باشگاه تگ — کلیک‌پذیر برای تعیین روز باشگاه
+  // باشگاه تگ
   const gymTagBtn = document.createElement('span');
   gymTagBtn.className = 'dtag ' + (gym ? 'tgy' : '');
   gymTagBtn.style.cssText = 'cursor:pointer;opacity:' + (gym?'1':'.45');
@@ -253,7 +253,6 @@ function renderDet(i) {
   let gymHoldTimer = null;
   gymTagBtn.onmousedown = gymTagBtn.ontouchstart = () => {
     gymHoldTimer = setTimeout(() => {
-      // نگه‌داشتن طولانی = حذف از باشگاه
       localStorage.setItem('is_gym_' + i, '0');
       updOverall(); buildMonths(); renderDet(i);
     }, 700);
@@ -302,7 +301,7 @@ function renderDet(i) {
   if (isDone) {
     const donTag = document.createElement('span');
     donTag.className='dtag'; donTag.style.cssText='background:rgba(34,201,104,.12);color:var(--grn);border-color:rgba(34,201,104,.28)';
-    donTag.textContent='✅ روز کامل';
+    donTag.textContent='🏆 روز درخشان';
     dtags.appendChild(donTag);
   }
 
@@ -310,16 +309,15 @@ function renderDet(i) {
   dtop.appendChild(dr1);
   det.appendChild(dtop);
 
-  // toolbar — فقط اضافه کردن آیتم
+  // toolbar
   const tbar = document.createElement('div');
   tbar.className = 'tbar';
   const addBtn = document.createElement('button');
   addBtn.className = 'tbtn';
-  addBtn.textContent = '+ اضافه کردن برنامه';
+  addBtn.textContent = '+ افزودن برنامه';
   addBtn.onclick = () => togAddRow(i);
   tbar.appendChild(addBtn);
 
-  // اگه روز باشگاه بود، دکمه برنامه باشگاه
   if (gym) {
     const gymPlanBtn = document.createElement('button');
     gymPlanBtn.className = 'tbtn tgy2';
@@ -330,7 +328,7 @@ function renderDet(i) {
 
   const shareBtn = document.createElement('button');
   shareBtn.className = 'tbtn';
-  shareBtn.textContent = '📤 اشتراک';
+  shareBtn.textContent = '📤 اشتراک‌گذاری';
   shareBtn.onclick = () => shareDay(i);
   tbar.appendChild(shareBtn);
   det.appendChild(tbar);
@@ -359,14 +357,16 @@ function renderDet(i) {
     <input class="ainp" id="anew_t_${i}" placeholder="عنوان کار...">
     <input class="ainp" id="anew_s_${i}" placeholder="توضیح (اختیاری)">
     <div class="arbtns">
-      <button class="addbtn" onclick="addItem(${i})">اضافه کن</button>
+      <button class="addbtn" onclick="addItem(${i})">✨ اضافه کن</button>
       <button class="ccl" onclick="togAddRow(${i})">انصراف</button>
     </div>
   `;
   left.appendChild(arow);
 
-  const {L} = getSched(i);
-  L.forEach((item, k) => {
+  // ── FIX: فقط از ct_ بخون، نه getSched ──
+  const customItems = getCustomItems(i);
+
+  customItems.forEach((item, k) => {
     const isDoneItem = localStorage.getItem('tb_' + i + '_' + k) === '1';
     const tb = document.createElement('div');
     tb.className = 'tb' + (isDoneItem ? ' ck' : '');
@@ -407,14 +407,14 @@ function renderDet(i) {
     left.appendChild(tb);
   });
 
-  if (L.length === 0) {
+  if (customItems.length === 0) {
     const empty = document.createElement('div');
     empty.style.cssText = 'text-align:center;padding:24px;color:var(--t4);font-size:12px';
-    empty.innerHTML = '📝 هنوز آیتمی نداری<br><span style="font-size:10px">دکمه + اضافه کردن برنامه بزن</span>';
+    empty.innerHTML = '🌟 صفحه‌ات خالیه<br><span style="font-size:10px">دکمه + افزودن برنامه رو بزن</span>';
     left.appendChild(empty);
   }
 
-  // برنامه باشگاه (اگه موجود باشه)
+  // برنامه باشگاه
   if (gym) {
     const gymPlan = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
     if (gymPlan.length > 0) {
@@ -438,10 +438,11 @@ function renderDet(i) {
   const right = document.createElement('div');
   right.className = 'dcol';
 
-  const totalItems = L.length;
+  const cr = JSON.parse(localStorage.getItem('cr_' + i) || '[]');
+  const totalItems = cr.length;
   let doneItems = 0;
   for (let k = 0; k < totalItems; k++) {
-    if (localStorage.getItem('tb_' + i + '_' + k) === '1') doneItems++;
+    if (localStorage.getItem('rc_' + i + '_' + k) === '1') doneItems++;
   }
   const dayPct = totalItems > 0 ? Math.round(doneItems / totalItems * 100) : 0;
 
@@ -457,9 +458,10 @@ function renderDet(i) {
   `;
   right.appendChild(dpcard);
 
-  const cr = JSON.parse(localStorage.getItem('cr_' + i) || '[]');
   const checklistWrap = document.createElement('div');
   checklistWrap.id = 'checklist_' + i;
+
+  // ── FIX: ایندکس‌گذاری مستقیم روی cr ──
   cr.forEach((item, k) => {
     const parts = item.split('|');
     const txt = parts[0] || item;
@@ -467,10 +469,11 @@ function renderDet(i) {
     const done2 = localStorage.getItem('rc_' + i + '_' + k) === '1';
     const pi = document.createElement('div');
     pi.className = 'tb' + (done2 ? ' ck' : '');
-    pi.id = 'rc_' + i + '_' + k;
+    pi.id = 'rcrow_' + i + '_' + k;
 
     const tbc2 = document.createElement('div');
     tbc2.className = 'tbc';
+    tbc2.id = 'tbc2_' + i + '_' + k;
     tbc2.textContent = done2 ? '✓' : '';
     tbc2.onclick = () => togRC(i, k, tbc2);
 
@@ -487,6 +490,7 @@ function renderDet(i) {
     pi.appendChild(tbc2); pi.appendChild(tbi2); pi.appendChild(del2);
     checklistWrap.appendChild(pi);
   });
+
   right.appendChild(checklistWrap);
 
   const addCheckRow = document.createElement('div');
@@ -494,12 +498,12 @@ function renderDet(i) {
   const ckInp = document.createElement('input');
   ckInp.className = 'ainp';
   ckInp.id = 'ck_new_' + i;
-  ckInp.placeholder = '+ آیتم چک‌لیست...';
+  ckInp.placeholder = '+ آیتم جدید...';
   ckInp.onkeydown = (e) => { if (e.key === 'Enter') addCheckItem(i); };
   const ckBtn = document.createElement('button');
   ckBtn.className = 'addbtn';
   ckBtn.style.cssText = 'margin-top:6px;width:100%';
-  ckBtn.textContent = 'اضافه کن';
+  ckBtn.textContent = '✨ اضافه کن';
   ckBtn.onclick = () => addCheckItem(i);
   addCheckRow.appendChild(ckInp);
   addCheckRow.appendChild(ckBtn);
@@ -507,14 +511,14 @@ function renderDet(i) {
 
   const tipcard = document.createElement('div');
   tipcard.className = 'tipcard';
-  tipcard.innerHTML = `<div class="tiph">💡 نکته روز</div><div class="tipb">${tip}</div>`;
+  tipcard.innerHTML = `<div class="tiph">💡 نکته طلایی روز</div><div class="tipb">${tip}</div>`;
   right.appendChild(tipcard);
 
-  const ntHead = document.createElement('div'); ntHead.className='dch'; ntHead.style.marginTop='14px'; ntHead.textContent='یادداشت';
+  const ntHead = document.createElement('div'); ntHead.className='dch'; ntHead.style.marginTop='14px'; ntHead.textContent='📝 یادداشت';
   right.appendChild(ntHead);
   const ntarea = document.createElement('textarea');
   ntarea.className = 'ntarea';
-  ntarea.placeholder = 'یادداشت‌های امروزت...';
+  ntarea.placeholder = 'افکار و یادداشت‌های امروزت...';
   ntarea.value = note;
   ntarea.oninput = () => localStorage.setItem('note_' + i, ntarea.value);
   right.appendChild(ntarea);
@@ -522,7 +526,7 @@ function renderDet(i) {
   const donebtn = document.createElement('button');
   donebtn.className = 'donebtn ' + (isDone ? 'on' : 'off');
   donebtn.id = 'donebtn_' + i;
-  donebtn.textContent = isDone ? '✅ روز کامل شد!' : '✓ روز رو کامل کن';
+  donebtn.textContent = isDone ? '🏆 روز درخشان شد!' : '✓ این روز رو فتح کن';
   donebtn.onclick = () => togDone(i);
   right.appendChild(donebtn);
 
@@ -541,78 +545,52 @@ function renderDet(i) {
 
 // ── OPEN GYM PLAN MODAL ──
 function openGymPlan(i) {
-  const gymPlan = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
   document.getElementById('mTitle').textContent = '💪 برنامه باشگاه';
   const body = document.getElementById('mBody');
   body.innerHTML = '';
-
-  function renderGymList() {
-    const list = document.getElementById('gym_list');
-    if (!list) return;
-    list.innerHTML = '';
-    const gp = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
-    gp.forEach((ex, k) => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:var(--c3);border-radius:10px;margin-bottom:6px';
-      const txt = document.createElement('div');
-      txt.style.flex = '1';
-      txt.style.fontSize = '13px';
-      txt.innerHTML = `<strong>${ex.name}</strong>${ex.sets?'<br><span style="font-size:10px;color:var(--t3)">'+ex.sets+'</span>':''}${ex.time?'<br><span style="font-size:10px;color:var(--teal)">'+ex.time+'</span>':''}`;
-      const del = document.createElement('button');
-      del.className = 'delbtn';
-      del.textContent = '✕';
-      del.onclick = () => {
-        const gp2 = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
-        gp2.splice(k, 1);
-        localStorage.setItem('gym_plan_' + i, JSON.stringify(gp2));
-        renderGymList();
-      };
-      row.appendChild(txt); row.appendChild(del);
-      list.appendChild(row);
-    });
-  }
 
   const listDiv = document.createElement('div');
   listDiv.id = 'gym_list';
   body.appendChild(listDiv);
 
-  body.innerHTML += `
-    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--b1)">
-      <input class="minp" id="gex_name" placeholder="نام تمرین (مثلاً: اسکوات)">
-      <input class="minp" id="gex_sets" placeholder="ست‌ها (مثلاً: ۴×۱۰)">
-      <input class="minp" id="gex_time" placeholder="ساعت (اختیاری)">
-      <button class="mprim" onclick="addGymExercise(${i})">+ اضافه کن</button>
-    </div>
+  const formDiv = document.createElement('div');
+  formDiv.style.cssText = 'margin-top:12px;padding-top:12px;border-top:1px solid var(--b1)';
+  formDiv.innerHTML = `
+    <input class="minp" id="gex_name" placeholder="نام تمرین (مثلاً: اسکوات)">
+    <input class="minp" id="gex_sets" placeholder="ست‌ها (مثلاً: ۴×۱۰)">
+    <input class="minp" id="gex_time" placeholder="ساعت (اختیاری)">
+    <button class="mprim" onclick="addGymExercise(${i})">+ اضافه کن</button>
   `;
+  body.appendChild(formDiv);
 
-  // re-render list after innerHTML overwrite
-  setTimeout(() => {
-    const newList = document.createElement('div');
-    newList.id = 'gym_list';
-    body.insertBefore(newList, body.firstChild);
-    const gp = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
-    gp.forEach((ex, k) => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:var(--c3);border-radius:10px;margin-bottom:6px';
-      const txt = document.createElement('div');
-      txt.style.flex = '1';
-      txt.style.fontSize = '13px';
-      txt.innerHTML = `<strong>${ex.name}</strong>${ex.sets?'<br><span style="font-size:10px;color:var(--t3)">'+ex.sets+'</span>':''}${ex.time?'<br><span style="font-size:10px;color:var(--teal)">'+ex.time+'</span>':''}`;
-      const del = document.createElement('button');
-      del.className = 'delbtn';
-      del.textContent = '✕';
-      del.onclick = () => {
-        const gp2 = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
-        gp2.splice(k, 1);
-        localStorage.setItem('gym_plan_' + i, JSON.stringify(gp2));
-        openGymPlan(i);
-      };
-      row.appendChild(txt); row.appendChild(del);
-      newList.appendChild(row);
-    });
-  }, 0);
-
+  renderGymList(i);
   openMod();
+}
+
+function renderGymList(i) {
+  const list = document.getElementById('gym_list');
+  if (!list) return;
+  list.innerHTML = '';
+  const gp = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
+  gp.forEach((ex, k) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:var(--c3);border-radius:10px;margin-bottom:6px';
+    const txt = document.createElement('div');
+    txt.style.flex = '1';
+    txt.style.fontSize = '13px';
+    txt.innerHTML = `<strong>${ex.name}</strong>${ex.sets?'<br><span style="font-size:10px;color:var(--t3)">'+ex.sets+'</span>':''}${ex.time?'<br><span style="font-size:10px;color:var(--teal)">'+ex.time+'</span>':''}`;
+    const del = document.createElement('button');
+    del.className = 'delbtn';
+    del.textContent = '✕';
+    del.onclick = () => {
+      const gp2 = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
+      gp2.splice(k, 1);
+      localStorage.setItem('gym_plan_' + i, JSON.stringify(gp2));
+      renderGymList(i);
+    };
+    row.appendChild(txt); row.appendChild(del);
+    list.appendChild(row);
+  });
 }
 
 function addGymExercise(i) {
@@ -626,7 +604,7 @@ function addGymExercise(i) {
   if (name) name.value='';
   if (sets) sets.value='';
   if (time) time.value='';
-  openGymPlan(i);
+  renderGymList(i);
 }
 
 // ── CHECKLIST ──
@@ -644,22 +622,25 @@ function delCheckItem(i, k) {
   const cr = JSON.parse(localStorage.getItem('cr_' + i) || '[]');
   cr.splice(k, 1);
   localStorage.setItem('cr_' + i, JSON.stringify(cr));
-  // clear done state
-  for (let j = k; j < cr.length + 1; j++) {
+  // shift done states
+  for (let j = k; j < cr.length; j++) {
     const next = localStorage.getItem('rc_' + i + '_' + (j+1));
     if (next !== null) localStorage.setItem('rc_' + i + '_' + j, next);
     else localStorage.removeItem('rc_' + i + '_' + j);
   }
+  localStorage.removeItem('rc_' + i + '_' + cr.length);
   renderDet(i);
 }
 
+// ── FIX: togTB — فقط روی ct_ کار می‌کنه ──
 function togTB(i, k, el) {
   const cur = localStorage.getItem('tb_' + i + '_' + k) === '1';
-  localStorage.setItem('tb_' + i + '_' + k, cur ? '0' : '1');
+  const newVal = !cur;
+  localStorage.setItem('tb_' + i + '_' + k, newVal ? '1' : '0');
   const row = document.getElementById('tb_' + i + '_' + k);
-  if (row) row.classList.toggle('ck', !cur);
-  el.textContent = cur ? '' : '✓';
-  if (!cur) {
+  if (row) row.classList.toggle('ck', newVal);
+  el.textContent = newVal ? '✓' : '';
+  if (newVal) {
     el.classList.add('pop');
     spawnSp(el, '✅');
     setTimeout(() => el.classList.remove('pop'), 500);
@@ -667,13 +648,15 @@ function togTB(i, k, el) {
   updDayProgress(i);
 }
 
+// ── FIX: togRC — ایندکس مستقیم روی rc_ ──
 function togRC(i, k, el) {
   const cur = localStorage.getItem('rc_' + i + '_' + k) === '1';
-  localStorage.setItem('rc_' + i + '_' + k, cur ? '0' : '1');
-  const row = document.getElementById('rc_' + i + '_' + k);
-  if (row) row.classList.toggle('ck', !cur);
-  el.textContent = cur ? '' : '✓';
-  if (!cur) {
+  const newVal = !cur;
+  localStorage.setItem('rc_' + i + '_' + k, newVal ? '1' : '0');
+  const row = document.getElementById('rcrow_' + i + '_' + k);
+  if (row) row.classList.toggle('ck', newVal);
+  el.textContent = newVal ? '✓' : '';
+  if (newVal) {
     el.classList.add('pop');
     spawnSp(el, '⭐');
     setTimeout(() => el.classList.remove('pop'), 500);
@@ -682,11 +665,11 @@ function togRC(i, k, el) {
 }
 
 function updDayProgress(i) {
-  const {L} = getSched(i);
-  const total = L.length;
+  const cr = JSON.parse(localStorage.getItem('cr_' + i) || '[]');
+  const total = cr.length;
   let done = 0;
   for (let k = 0; k < total; k++) {
-    if (localStorage.getItem('tb_' + i + '_' + k) === '1') done++;
+    if (localStorage.getItem('rc_' + i + '_' + k) === '1') done++;
   }
   const pct = total > 0 ? Math.round(done / total * 100) : 0;
   const pbar = document.getElementById('daybar_' + i);
@@ -701,7 +684,7 @@ function togDone(i) {
   const btn = document.getElementById('donebtn_' + i);
   if (btn) {
     btn.className = 'donebtn ' + (cur ? 'off' : 'on');
-    btn.textContent = cur ? '✓ روز رو کامل کن' : '✅ روز کامل شد!';
+    btn.textContent = cur ? '✓ این روز رو فتح کن' : '🏆 روز درخشان شد!';
   }
   if (!cur) spawnConf(btn || document.body);
   updOverall();
@@ -713,6 +696,7 @@ function togAddRow(i) {
   if (arow) arow.classList.toggle('show');
 }
 
+// ── FIX: addItem — ذخیره در ct_ با فرمت درست ──
 function addItem(i) {
   const t = document.getElementById('anew_t_' + i);
   const s = document.getElementById('anew_s_' + i);
@@ -722,7 +706,8 @@ function addItem(i) {
   const ct = JSON.parse(localStorage.getItem('ct_' + i) || '[]');
   const emoji = (e && e.value.trim()) || '📌';
   const timeVal = (time && time.value.trim()) || '';
-  ct.push(t.value.trim() + '|' + (s ? s.value.trim() : '') + '|' + timeVal + '|' + emoji);
+  const subVal = (s && s.value.trim()) || '';
+  ct.push(t.value.trim() + '|' + subVal + '|' + timeVal + '|' + emoji);
   localStorage.setItem('ct_' + i, JSON.stringify(ct));
   if (t) t.value = '';
   if (s) s.value = '';
@@ -731,15 +716,19 @@ function addItem(i) {
   renderDet(i);
 }
 
+// ── FIX: delItem — مستقیم روی ct_ بدون staticCount ──
 function delItem(i, k) {
-  const gym = isGym(i);
-  const party = isCafe(i);
-  const gymPlan = gym ? JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]') : [];
-  const staticCount = gymPlan.length + (party ? 1 : 0);
-  if (k < staticCount) return; // آیتم‌های ثابت باشگاه/خوشگذرونی
   const ct = JSON.parse(localStorage.getItem('ct_' + i) || '[]');
-  ct.splice(k - staticCount, 1);
+  if (k < 0 || k >= ct.length) return;
+  ct.splice(k, 1);
   localStorage.setItem('ct_' + i, JSON.stringify(ct));
+  // shift done states
+  for (let j = k; j < ct.length; j++) {
+    const next = localStorage.getItem('tb_' + i + '_' + (j+1));
+    if (next !== null) localStorage.setItem('tb_' + i + '_' + j, next);
+    else localStorage.removeItem('tb_' + i + '_' + j);
+  }
+  localStorage.removeItem('tb_' + i + '_' + ct.length);
   renderDet(i);
 }
 
@@ -747,7 +736,7 @@ function shareDay(i) {
   const pd = getPD(i);
   const text = `روز ${i+1} — ${pd.d} ${pd.m} 🔥 #پلن_من`;
   if (navigator.share) navigator.share({title:'پلن من', text}).catch(()=>{});
-  else navigator.clipboard.writeText(text).then(()=>alert('کپی شد!'));
+  else navigator.clipboard.writeText(text).then(()=>alert('✅ کپی شد!'));
 }
 
 // ── COUNTDOWN با ثانیه ──
@@ -786,8 +775,8 @@ function importData() {
     const r = new FileReader();
     r.onload = ev => {
       try { const d=JSON.parse(ev.target.result); Object.keys(d).forEach(k=>localStorage.setItem(k,d[k]));
-        if (confirm('بکاپ بازیابی شد! صفحه رفرش بشه؟')) location.reload(); }
-      catch(err) { alert('فایل نامعتبر'); }
+        if (confirm('✅ بکاپ بازیابی شد! صفحه رفرش بشه؟')) location.reload(); }
+      catch(err) { alert('❌ فایل نامعتبر'); }
     };
     r.readAsText(f);
   };
@@ -795,7 +784,7 @@ function importData() {
 }
 
 function resetAll() {
-  if (confirm('همه داده‌ها پاک بشن؟') && confirm('مطمئنی؟ برگشتی نیست!')) { localStorage.clear(); location.reload(); }
+  if (confirm('همه داده‌ها پاک میشناااااا') && confirm('ناموسن مطمئنی؟ برگشتی نیست!')) { localStorage.clear(); location.reload(); }
 }
 
 function openMod() { document.getElementById('modalBg').classList.add('open'); }
@@ -814,20 +803,9 @@ function initTilt() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  buildWater(); buildMonths(); updOverall(); updQ(false); startCD(); initCanvas(); initTilt(); updTodayBanner();
+  buildWater(); buildMonths(); updOverall(); updQ(false); startCD(); initCanvas(); initTilt();
   setInterval(() => {
     const dots=document.getElementById('qdts');
     if (dots) dots.querySelectorAll('.qdot').forEach((d,i)=>d.classList.toggle('a',i===qI%Math.min(QQ.length,12)));
   }, 1000);
-  // هر دقیقه چک کن که آیا روز عوض شده — اگه عوض شده بود، بنر "امروز" و تقویم رو آپدیت کن
-  let lastDayIdx = getTodayIndex();
-  setInterval(() => {
-    const idx = getTodayIndex();
-    if (idx !== lastDayIdx) {
-      lastDayIdx = idx;
-      updTodayBanner();
-      buildMonths();
-    }
-  }, 60000);
 });
-
