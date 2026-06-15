@@ -347,7 +347,7 @@ function renderDet(i) {
       <input class="ainp" id="anew_time_${i}" placeholder="ساعت (مثلاً ۸:۰۰)">
     </div>
     <input class="ainp" id="anew_t_${i}" placeholder="عنوان کار...">
-    <input class="ainp" id="anew_s_${i}" placeholder="توضیح (اختیاری)">
+    <input class="ainp" id="anew_s_${i}" placeholder="توضیح (اختیاری ولی ریز بیده)">
     <div class="arbtns">
       <button class="addbtn" onclick="addItem(${i})">اضافه کن</button>
       <button class="ccl" onclick="togAddRow(${i})">انصراف</button>
@@ -413,7 +413,7 @@ function renderDet(i) {
     if (gymPlan.length > 0) {
       const gd = document.createElement('div');
       gd.className = 'gmd';
-      const gmdt = document.createElement('div'); gmdt.className='gmdt'; gmdt.textContent='💪 برنامه باشگاه';
+      const gmdt = document.createElement('div'); gmdt.className='gmdt'; gmdt.textContent='💪 برنامه باشگاه رونی کلمن';
       const gmdg = document.createElement('div'); gmdg.className='gmdg';
       gymPlan.forEach(ex => {
         const gmdm = document.createElement('div'); gmdm.className='gmdm';
@@ -538,7 +538,7 @@ function renderDet(i) {
 // ── OPEN GYM PLAN MODAL ──
 function openGymPlan(i) {
   const gymPlan = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
-  document.getElementById('mTitle').textContent = '💪 برنامه باشگاه';
+  document.getElementById('mTitle').textContent = '💪 برنامه باشگاه رونی کلمن';
   const body = document.getElementById('mBody');
   body.innerHTML = '';
 
@@ -803,7 +803,7 @@ function importData() {
 }
 
 function resetAll() {
-  if (confirm('همه داده‌ها پاک بشن؟') && confirm('مطمئنی؟ برگشتی نیست!')) { localStorage.clear(); location.reload(); }
+  if (confirm(' ناموسن همه داده‌ها پاک بشن؟') && confirm('مطمئنی؟ برگشتی نیستاااا!')) { localStorage.clear(); location.reload(); }
 }
 
 function openMod() { document.getElementById('modalBg').classList.add('open'); }
