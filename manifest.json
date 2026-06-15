@@ -7,6 +7,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#03030a",
+  "version": "2026-06-15-v3", 
   "theme_color": "#03030a",
   "dir": "rtl",
   "lang": "fa",
