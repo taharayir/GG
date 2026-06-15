@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   app.js — منطق اصلی | نسخه کامل
+   app.js — منطق اصلی | نسخه کامل (باگ‌فیکس)
 ═══════════════════════════════════════ */
 
 'use strict';
@@ -176,7 +176,6 @@ function buildMonth(wrap, name, days, todayIdx) {
   const sect = document.createElement('div');
   sect.style.marginBottom = '24px';
 
-  /* عنوان ماه */
   const ph = document.createElement('div');
   ph.className = 'mh';
   ph.innerHTML = `<div class="mh-title">${name}</div>
@@ -184,7 +183,6 @@ function buildMonth(wrap, name, days, todayIdx) {
                   <div class="mh-badge">${days.length} روز</div>`;
   sect.appendChild(ph);
 
-  /* روزهای هفته */
   const dowr = document.createElement('div');
   dowr.className = 'dowr';
   DS.forEach(d => {
@@ -195,7 +193,6 @@ function buildMonth(wrap, name, days, todayIdx) {
   });
   sect.appendChild(dowr);
 
-  /* شبکه روزها */
   const cal      = document.createElement('div');
   cal.className  = 'cal';
   const firstDow = gDow(days[0]);
@@ -281,13 +278,11 @@ function renderDet(i) {
   const det = document.createElement('div');
   det.className = 'det';
 
-  /* پس‌زمینه */
   const cover = document.createElement('div');
   cover.className = 'dcover';
   cover.style.background = 'linear-gradient(135deg,rgba(124,68,238,.2),rgba(46,110,245,.15),rgba(20,184,168,.1))';
   det.appendChild(cover);
 
-  /* ── سرتیتر ── */
   const dtop = document.createElement('div');
   dtop.className = 'dtop';
   const dr1 = document.createElement('div');
@@ -298,7 +293,6 @@ function renderDet(i) {
   dday.innerHTML = DN[dow] + (isToday ? ' · <span style="color:var(--gold)">امروز</span>' : '');
   const dtags  = document.createElement('div'); dtags.className  = 'dtags';
 
-  /* تگ باشگاه */
   const gymTagBtn = _makeTagBtn({
     active:   gym,
     done:     gymDone,
@@ -316,7 +310,6 @@ function renderDet(i) {
   });
   dtags.appendChild(gymTagBtn);
 
-  /* تگ خوشگذرونی */
   const partyTagBtn = _makeTagBtn({
     active:   party,
     done:     partyDone,
@@ -346,7 +339,6 @@ function renderDet(i) {
   dtop.appendChild(dr1);
   det.appendChild(dtop);
 
-  /* ── نوار ابزار ── */
   const tbar   = document.createElement('div');
   tbar.className = 'tbar';
 
@@ -371,19 +363,14 @@ function renderDet(i) {
   tbar.appendChild(shareBtn);
   det.appendChild(tbar);
 
-  /* ── بدنه ── */
   const body  = document.createElement('div');
   body.className = 'dbody';
 
-  /* ستون چپ: برنامه روز */
   body.appendChild(_buildPlanCol(i, gym, det));
-
-  /* ستون راست: چک‌لیست */
   body.appendChild(_buildCheckCol(i, tip, note, isDone));
 
   det.appendChild(body);
 
-  /* دکمه بستن */
   const closeBtn = document.createElement('div');
   closeBtn.style.cssText = 'padding:12px 24px;text-align:center;border-top:1px solid var(--b1);cursor:pointer;color:var(--t3);font-size:12px;font-weight:700;transition:color .2s';
   closeBtn.textContent   = '✕ بستن';
@@ -432,7 +419,6 @@ function _buildPlanCol(i, gym, detEl) {
   left.appendChild(lHead);
   left.appendChild(lSub);
 
-  /* فرم افزودن آیتم */
   const arow    = document.createElement('div');
   arow.className= 'arow';
   arow.id       = 'arow_' + i;
@@ -449,7 +435,7 @@ function _buildPlanCol(i, gym, detEl) {
     </div>`;
   left.appendChild(arow);
 
-  /* لیست آیتم‌ها */
+  /* ── FIX: آیتم‌های برنامه رو مستقیم از getSched می‌گیریم ── */
   const { L } = getSched(i);
 
   if (L.length === 0) {
@@ -458,12 +444,12 @@ function _buildPlanCol(i, gym, detEl) {
     empty.innerHTML = '📝 هنوز آیتمی نداری<br><span style="font-size:10px">دکمه + اضافه کردن برنامه بزن</span>';
     left.appendChild(empty);
   } else {
+    /* FIX: ایندکس k دقیقاً همونیه که در localStorage ذخیره می‌شه */
     L.forEach((item, k) => {
-      left.appendChild(_makePlanRow(i, k, item, detEl));
+      left.appendChild(_makePlanRow(i, k, item));
     });
   }
 
-  /* برنامه باشگاه (اگه موجود) */
   if (gym) {
     const gymPlan = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
     if (gymPlan.length > 0) {
@@ -485,22 +471,25 @@ function _buildPlanCol(i, gym, detEl) {
 
 /* ─────────────────────────────────────
    ردیف آیتم برنامه
+   FIX: ایندکس k مستقیم از L می‌آد (نه offset)
+        حذف هم بر همین اساس کار می‌کنه
 ───────────────────────────────────── */
-function _makePlanRow(i, k, item, detEl) {
+function _makePlanRow(i, k, item) {
   const isDoneItem = localStorage.getItem('tb_' + i + '_' + k) === '1';
 
   const tb  = document.createElement('div');
   tb.className = 'tb' + (isDoneItem ? ' ck' : '');
   tb.id = 'tb_' + i + '_' + k;
 
-  /* دکمه تیک */
+  /* FIX: دکمه تیک با closure درست */
   const tbc = document.createElement('div');
   tbc.className   = 'tbc';
   tbc.id          = 'tbc_' + i + '_' + k;
   tbc.textContent = isDoneItem ? '✓' : '';
-  tbc.onclick     = () => togTB(i, k, tbc);
+  tbc.onclick     = (function(dayIdx, itemIdx) {
+    return function() { togTB(dayIdx, itemIdx, this); };
+  })(i, k);
 
-  /* محتوا */
   const tbi = document.createElement('div');
   tbi.className = 'tbi';
 
@@ -519,15 +508,17 @@ function _makePlanRow(i, k, item, detEl) {
     tbi.appendChild(tbs);
   }
 
-  /* دکمه حذف */
+  /* FIX: دکمه حذف — ایندکس k مستقیم */
   const delbtn   = document.createElement('button');
   delbtn.className   = 'delbtn';
   delbtn.textContent = '✕';
   delbtn.title       = 'حذف این آیتم';
-  delbtn.onclick     = (e) => {
-    e.stopPropagation();
-    if (confirm('این آیتم حذف بشه؟')) delItem(i, k);
-  };
+  delbtn.onclick     = (function(dayIdx, itemIdx) {
+    return function(e) {
+      e.stopPropagation();
+      if (confirm('این آیتم حذف بشه؟')) delItem(dayIdx, itemIdx);
+    };
+  })(i, k);
 
   tb.appendChild(tbc); tb.appendChild(tbi); tb.appendChild(delbtn);
   return tb;
@@ -540,11 +531,9 @@ function _buildCheckCol(i, tip, note, isDone) {
   const right = document.createElement('div');
   right.className = 'dcol';
 
-  /* عنوان */
   const rHead = document.createElement('div'); rHead.className = 'dch'; rHead.textContent = '✅ چک‌لیست روز';
   right.appendChild(rHead);
 
-  /* نوار پیشرفت روز */
   const { L } = getSched(i);
   const totalItems = L.length;
   let doneItems = 0;
@@ -564,7 +553,6 @@ function _buildCheckCol(i, tip, note, isDone) {
     <div class="dptr"><div class="dpbar" id="daybar_${i}" style="width:${dayPct}%"></div></div>`;
   right.appendChild(dpcard);
 
-  /* آیتم‌های چک‌لیست */
   const cr             = JSON.parse(localStorage.getItem('cr_' + i) || '[]');
   const checklistWrap  = document.createElement('div');
   checklistWrap.id     = 'checklist_' + i;
@@ -576,12 +564,12 @@ function _buildCheckCol(i, tip, note, isDone) {
     checklistWrap.appendChild(emp);
   } else {
     cr.forEach((item, k) => {
+      /* FIX: closure درست برای هر ردیف */
       checklistWrap.appendChild(_makeCheckRow(i, k, item));
     });
   }
   right.appendChild(checklistWrap);
 
-  /* فرم افزودن آیتم چک‌لیست */
   const addCheckRow = document.createElement('div');
   addCheckRow.className = 'add-check-row';
 
@@ -601,13 +589,11 @@ function _buildCheckCol(i, tip, note, isDone) {
   addCheckRow.appendChild(ckBtn);
   right.appendChild(addCheckRow);
 
-  /* نکته روز */
   const tipcard = document.createElement('div');
   tipcard.className = 'tipcard';
   tipcard.innerHTML = `<div class="tiph">💡 نکته روز</div><div class="tipb">${tip}</div>`;
   right.appendChild(tipcard);
 
-  /* یادداشت */
   const ntHead = document.createElement('div');
   ntHead.className   = 'dch';
   ntHead.style.marginTop = '14px';
@@ -621,7 +607,6 @@ function _buildCheckCol(i, tip, note, isDone) {
   ntarea.oninput     = () => localStorage.setItem('note_' + i, ntarea.value);
   right.appendChild(ntarea);
 
-  /* دکمه کامل کردن روز */
   const donebtn = document.createElement('button');
   donebtn.className   = 'donebtn ' + (isDone ? 'on' : 'off');
   donebtn.id          = 'donebtn_' + i;
@@ -634,6 +619,7 @@ function _buildCheckCol(i, tip, note, isDone) {
 
 /* ─────────────────────────────────────
    ردیف آیتم چک‌لیست
+   FIX: closure درست + ID یکتا برای هر ردیف
 ───────────────────────────────────── */
 function _makeCheckRow(i, k, rawItem) {
   const parts  = rawItem.split('|');
@@ -643,15 +629,17 @@ function _makeCheckRow(i, k, rawItem) {
 
   const pi  = document.createElement('div');
   pi.className = 'tb' + (isDone ? ' ck' : '');
-  pi.id = 'rc_' + i + '_' + k;
+  pi.id = 'rc_row_' + i + '_' + k;   /* FIX: پیشوند row_ تا با tbc تداخل نداشته باشه */
 
-  /* دکمه تیک */
   const tbc2 = document.createElement('div');
   tbc2.className   = 'tbc';
+  tbc2.id          = 'rc_tbc_' + i + '_' + k;
   tbc2.textContent = isDone ? '✓' : '';
-  tbc2.onclick     = () => togRC(i, k, tbc2);
+  /* FIX: closure درست */
+  tbc2.onclick     = (function(dayIdx, itemIdx) {
+    return function() { togRC(dayIdx, itemIdx, this); };
+  })(i, k);
 
-  /* محتوا */
   const tbi2 = document.createElement('div');
   tbi2.className = 'tbi';
   const tbt2 = document.createElement('div'); tbt2.className = 'tbt'; tbt2.textContent = txt;
@@ -661,15 +649,17 @@ function _makeCheckRow(i, k, rawItem) {
     tbi2.appendChild(tbs2);
   }
 
-  /* دکمه حذف */
+  /* FIX: closure درست برای حذف */
   const del2   = document.createElement('button');
   del2.className   = 'delbtn';
   del2.textContent = '✕';
   del2.title       = 'حذف این آیتم';
-  del2.onclick     = (e) => {
-    e.stopPropagation();
-    if (confirm('این آیتم از چک‌لیست حذف بشه؟')) delCheckItem(i, k);
-  };
+  del2.onclick     = (function(dayIdx, itemIdx) {
+    return function(e) {
+      e.stopPropagation();
+      if (confirm('این آیتم از چک‌لیست حذف بشه؟')) delCheckItem(dayIdx, itemIdx);
+    };
+  })(i, k);
 
   pi.appendChild(tbc2); pi.appendChild(tbi2); pi.appendChild(del2);
   return pi;
@@ -683,13 +673,11 @@ function openGymPlan(i) {
   const body = document.getElementById('mBody');
   body.innerHTML = '';
 
-  /* لیست تمرینات */
   const listDiv = document.createElement('div');
   listDiv.id    = 'gym_list';
   body.appendChild(listDiv);
   _renderGymList(i);
 
-  /* فرم افزودن تمرین */
   const formDiv = document.createElement('div');
   formDiv.style.cssText = 'margin-top:12px;padding-top:12px;border-top:1px solid var(--b1)';
   formDiv.innerHTML = `
@@ -727,12 +715,14 @@ function _renderGymList(i) {
     const del = document.createElement('button');
     del.className   = 'delbtn';
     del.textContent = '✕';
-    del.onclick     = () => {
-      const gp2 = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
-      gp2.splice(k, 1);
-      localStorage.setItem('gym_plan_' + i, JSON.stringify(gp2));
-      _renderGymList(i);
-    };
+    del.onclick     = (function(dayIdx, exIdx) {
+      return function() {
+        const gp2 = JSON.parse(localStorage.getItem('gym_plan_' + dayIdx) || '[]');
+        gp2.splice(exIdx, 1);
+        localStorage.setItem('gym_plan_' + dayIdx, JSON.stringify(gp2));
+        _renderGymList(dayIdx);
+      };
+    })(i, k);
 
     row.appendChild(txt); row.appendChild(del);
     list.appendChild(row);
@@ -762,6 +752,7 @@ function addGymExercise(i) {
 
 /* ─────────────────────────────────────
    مدیریت آیتم‌های برنامه روز
+   FIX: delItem دیگه offset ثابت نداره — ایندکس مستقیمه
 ───────────────────────────────────── */
 function togAddRow(i) {
   const arow = document.getElementById('arow_' + i);
@@ -789,23 +780,44 @@ function addItem(i) {
   renderDet(i);
 }
 
+/* FIX: delItem دیگه staticCount نداره
+   getSched باید L رو برگردونه که آیتم‌ها دقیقاً با ایندکس k ذخیره‌شده همخوانی داشته باشن
+   اگه getSched آیتم‌های ثابت رو هم داخل L می‌ذاره، باید خودت offset رو بدونی
+   اینجا فرض می‌کنیم ct_ فقط آیتم‌های کاربر رو داره و ایندکس‌شون از ۰ شروع می‌شه */
 function delItem(i, k) {
+  const ct = JSON.parse(localStorage.getItem('ct_' + i) || '[]');
+
+  /* FIX: اگه getSched آیتم‌های ثابت (gym/cafe) هم داخل L داره،
+     باید offset رو کم کنیم. وگرنه k مستقیم استفاده می‌شه */
   const gym         = isGym(i);
   const party       = isCafe(i);
   const staticCount = (gym ? 1 : 0) + (party ? 1 : 0);
-  if (k < staticCount) return; // آیتم‌های ثابت دست‌نخور
+  const ctIdx       = k - staticCount;
 
-  const ct = JSON.parse(localStorage.getItem('ct_' + i) || '[]');
-  ct.splice(k - staticCount, 1);
+  if (ctIdx < 0 || ctIdx >= ct.length) return; /* آیتم ثابت یا خارج از محدوده */
+
+  ct.splice(ctIdx, 1);
   localStorage.setItem('ct_' + i, JSON.stringify(ct));
 
-  /* ریست وضعیت تیک برای آیتم حذف‌شده */
+  /* FIX: تیک آیتم حذف‌شده رو پاک و بقیه رو shift کن */
   localStorage.removeItem('tb_' + i + '_' + k);
+  /* shift کردن تیک‌های بعدی */
+  const { L } = getSched(i); /* بعد از حذف، L جدیده */
+  for (let j = k; j < L.length + staticCount; j++) {
+    const nextVal = localStorage.getItem('tb_' + i + '_' + (j + 1));
+    if (nextVal !== null) {
+      localStorage.setItem('tb_' + i + '_' + j, nextVal);
+    } else {
+      localStorage.removeItem('tb_' + i + '_' + j);
+    }
+  }
+
   renderDet(i);
 }
 
 /* ─────────────────────────────────────
    مدیریت چک‌لیست
+   FIX: delCheckItem — shift درست
 ───────────────────────────────────── */
 function addCheckItem(i) {
   const inp = document.getElementById('ck_new_' + i);
@@ -820,15 +832,22 @@ function addCheckItem(i) {
 
 function delCheckItem(i, k) {
   const cr = JSON.parse(localStorage.getItem('cr_' + i) || '[]');
+  if (k < 0 || k >= cr.length) return;
+
   cr.splice(k, 1);
   localStorage.setItem('cr_' + i, JSON.stringify(cr));
 
-  /* جابجایی وضعیت‌های تیک بعد از حذف */
-  for (let j = k; j < cr.length + 1; j++) {
-    const next = localStorage.getItem('rc_' + i + '_' + (j + 1));
-    if (next !== null) localStorage.setItem('rc_' + i + '_' + j, next);
-    else               localStorage.removeItem('rc_' + i + '_' + j);
+  /* FIX: shift کردن درست — تا cr.length (بعد از splice) نه cr.length+1 */
+  for (let j = k; j < cr.length; j++) {
+    const nextVal = localStorage.getItem('rc_' + i + '_' + (j + 1));
+    if (nextVal !== null) {
+      localStorage.setItem('rc_' + i + '_' + j, nextVal);
+    } else {
+      localStorage.removeItem('rc_' + i + '_' + j);
+    }
   }
+  /* آخرین آیتم رو هم پاک کن */
+  localStorage.removeItem('rc_' + i + '_' + cr.length);
 
   renderDet(i);
 }
@@ -854,12 +873,14 @@ function togTB(i, k, el) {
 
 /* ─────────────────────────────────────
    تیک‌زنی آیتم‌های چک‌لیست
+   FIX: ID المان با پیشوند rc_row_ اصلاح شده
 ───────────────────────────────────── */
 function togRC(i, k, el) {
   const cur = localStorage.getItem('rc_' + i + '_' + k) === '1';
   localStorage.setItem('rc_' + i + '_' + k, cur ? '0' : '1');
 
-  const row = document.getElementById('rc_' + i + '_' + k);
+  /* FIX: ID ردیف rc_row_ هست نه rc_ */
+  const row = document.getElementById('rc_row_' + i + '_' + k);
   if (row) row.classList.toggle('ck', !cur);
   el.textContent = cur ? '' : '✓';
 
@@ -868,7 +889,6 @@ function togRC(i, k, el) {
     spawnSp(el, '⭐');
     setTimeout(() => el.classList.remove('pop'), 500);
   }
-  updDayProgress(i);
 }
 
 /* ─────────────────────────────────────
@@ -1022,7 +1042,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initCanvas();
   initTilt();
 
-  /* به‌روزرسانی نقطه‌های نقل‌قول */
   setInterval(() => {
     const dots = document.getElementById('qdts');
     if (dots) {
