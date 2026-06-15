@@ -1,0 +1,27 @@
+{
+  "name": "پلن من — ۴۰ روز",
+  "short_name": "پلن من",
+  "description": "برنامه شخصی ۴۰ روزه برای کنکور، باشگاه و عادت‌های روزانه",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#03030a",
+  "theme_color": "#03030a",
+  "dir": "rtl",
+  "lang": "fa",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

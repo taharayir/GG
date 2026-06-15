@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="پلن من">
+<meta name="theme-color" content="#03030a">
+<title>پلن من · اسفند ۱۴۰۵</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').then(function(){
+      console.log('SW registered');
+    }).catch(function(err){
+      console.log('SW error:', err);
+    });
+  });
+}
+</script>
+</head>
+<body>
+
+<div id="bgLayer"></div>
+<canvas id="cvs"></canvas>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="orb o4"></div><div class="orb o5"></div><div class="orb o6"></div>
+
+<!-- ═══════════════════════════ HOME PAGE ═══════════════════════════ -->
+<div id="pg-home" class="pg act">
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-grid"></div>
+    <div class="badge"><span class="bdot"></span>پلن شخصی · اسفند ۱۴۰۵</div>
+    <h1 class="htitle"><span class="ht1">مسیر تغییر</span><span class="ht2">۲۴ خرداد — اسفند ۱۴۰۵</span></h1>
+    <p class="hsub">باشگاه · کافه · رشد · هر روز یه قدم<br>هر قدم یه نتیجه</p>
+    <div class="cd">
+      <div class="cdi"><span class="cdn" id="cdd">--</span><div class="cdl">روز</div></div>
+      <div class="cdi"><span class="cdn" id="cdh">--</span><div class="cdl">ساعت</div></div>
+      <div class="cdi"><span class="cdn" id="cdm">--</span><div class="cdl">دقیقه</div></div>
+      <div class="cdi"><span class="cdn" id="cds" style="color:var(--teal)">--</span><div class="cdl" style="color:var(--teal)">ثانیه</div></div>
+    </div>
+    <div class="today-banner" id="todayBanner">
+      <span class="tdot">📅</span>
+      <span id="todayTxt"></span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="sc" style="--sc:var(--blue)"><span class="scn" id="gymCount">۰</span><div class="scl">روز باشگاه</div></div>
+    <div class="sc" style="--sc:var(--pur)"><span class="scn" id="cafeCount">۰</span><div class="scl">خوشگذرونی</div></div>
+    <div class="sc" style="--sc:var(--grn)"><span class="scn" id="hCount">۰</span><div class="scl">روز کامل</div></div>
+    <div class="sc" style="--sc:var(--gold)"><span class="scn" id="totalDays">--</span><div class="scl">روز برنامه</div></div>
+  </div>
+
+  <div class="card tilt-card" style="animation-delay:.4s">
+    <div class="ctitle">💧 آب روزانه <span class="csub" id="wstat">هدف: ۸ لیوان</span></div>
+    <div class="gls" id="glw"></div>
+    <div class="wtrack"><div class="wbar" id="wbar" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2)">
+      <span>خورده: <strong id="wn">۰</strong> لیوان</span>
+      <span style="color:var(--teal);font-weight:800;font-family:'Space Grotesk',sans-serif" id="wml">۰ ml</span>
+    </div>
+  </div>
+
+  <div class="qcard tilt-card" style="animation:aU .7s ease .5s both">
+    <div class="qbig">"</div>
+    <div class="qrow">
+      <div class="qem" id="qem">💬</div>
+      <div class="qbody">
+        <div class="qtxt" id="qtxt"></div>
+        <div class="qmeta"><span class="qauth" id="qauth"></span><span class="qcnt" id="qcnt"></span></div>
+        <div class="qdots" id="qdts"></div>
+        <div class="qbtns">
+          <button class="qbtn" onclick="chQ(-1)">← قبلی</button>
+          <button class="qbtn" onclick="shuffleQ()">⤮ تصادفی</button>
+          <button class="qbtn" onclick="chQ(1)">بعدی →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card tilt-card" style="animation-delay:.6s">
+    <div class="ctitle">📊 پیشرفت کل دوره</div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center">
+      <div class="ring-wrap">
+        <svg class="rsvg" viewBox="0 0 100 100">
+          <defs><linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#7c44ee"/>
+            <stop offset="50%" stop-color="#2e6ef5"/>
+            <stop offset="100%" stop-color="#14b8a8"/>
+          </linearGradient></defs>
+          <circle class="rbg" cx="50" cy="50" r="44"/>
+          <circle class="rfg" id="rfg" cx="50" cy="50" r="44"/>
+        </svg>
+        <div class="rnum" id="rnum"><span>۰٪</span><small>کامل</small></div>
+      </div>
+      <div>
+        <div style="height:7px;background:var(--b2);border-radius:4px;overflow:hidden;margin-bottom:7px"><div id="ovbar" style="height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,var(--pur),var(--blue),var(--teal));transition:width 1.6s cubic-bezier(.34,1.56,.64,1)"></div></div>
+        <div style="font-size:11px;color:var(--t3)" id="ovsub">۰ روز کامل</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ CALENDAR PAGE ═══════════════════════════ -->
+<div id="pg-cal" class="pg">
+<div class="wrap">
+  <div class="pgh">📅 تقویم برنامه</div>
+  <div class="legend">
+    <span>🔵 باشگاه</span><span>🟣 کافه</span><span>🟢 کامل</span><span>🟡 انتخاب‌شده</span>
+  </div>
+  <div id="detPanel" style="display:none"></div>
+  <div id="mArea"></div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ HABIT PAGE ═══════════════════════════ -->
+<div id="pg-habit" class="pg">
+<div class="wrap">
+  <div class="pgh">⚡ عادت‌تراکر</div>
+  <div id="hbtList"></div>
+  <button class="addbig" onclick="openAddHabit()">+ عادت جدید</button>
+</div>
+</div>
+
+<!-- ═══════════════════════════ MY PLAN PAGE ═══════════════════════════ -->
+<div id="pg-plan" class="pg">
+<div class="wrap">
+  <div class="pgh">📋 برنامه‌ریز من</div>
+  <div style="font-size:12px;color:var(--t3);margin-bottom:18px;margin-top:-8px">برنامه روزت رو با ساعت و ایموجی بساز</div>
+  <div id="planBlocks"></div>
+  <button class="addbig" onclick="openAddBlock()">+ بخش جدید</button>
+</div>
+</div>
+
+<!-- ═══════════════════════════ SETTINGS PAGE ═══════════════════════════ -->
+<div id="pg-set" class="pg">
+<div class="wrap">
+  <div class="pgh">⚙️ تنظیمات</div>
+  <div class="setgrp">
+    <div class="setttl">نصب روی آیفون</div>
+    <div class="install-box">
+      <div style="font-size:13px;font-weight:800;margin-bottom:15px;color:var(--pur2)">📲 نصب مثل اپ — ذخیره همیشگی</div>
+      <div class="istep"><div class="isn">۱</div><div class="ist">فایل رو در <strong>Safari</strong> باز کن (نه Chrome یا Firefox)</div></div>
+      <div class="istep"><div class="isn">۲</div><div class="ist">دکمه <strong>Share</strong> پایین صفحه (مربع با فلش رو به بالا)</div></div>
+      <div class="istep"><div class="isn">۳</div><div class="ist">گزینه <strong>Add to Home Screen</strong> رو انتخاب کن</div></div>
+      <div class="istep"><div class="isn">۴</div><div class="ist">اسمش رو <strong>پلن من</strong> بذار و <strong>Add</strong> بزن</div></div>
+    </div>
+  </div>
+<div class="setarr">‹</div></div>
+  </div>
+  <div class="setgrp">
+    <div class="setttl">داده‌ها</div>
+    <div class="setitem" onclick="exportData()"><div class="setico">💾</div><div class="setinfo"><div class="setname">بکاپ گرفتن</div><div class="setsub">دانلود فایل JSON از همه داده‌ها</div></div><div class="setarr">‹</div></div>
+    <div class="setitem" onclick="importData()"><div class="setico">📥</div><div class="setinfo"><div class="setname">بازیابی بکاپ</div><div class="setsub">بارگذاری فایل بکاپ</div></div><div class="setarr">‹</div></div>
+  </div>
+  <div class="setgrp">
+    <div class="setttl">خطرناک</div>
+    <div class="setitem" onclick="resetAll()" style="border-color:rgba(238,48,48,.2)"><div class="setico">🗑️</div><div class="setinfo"><div class="setname" style="color:var(--red2)">پاک کردن همه داده‌ها</div><div class="setsub">تیک‌ها، یادداشت‌ها، عادت‌ها، موزیک</div></div><div class="setarr" style="color:var(--red2)">‹</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ BOTTOM NAV ═══════════════════════════ -->
+<nav class="bnav">
+  <button class="bni act" id="bn-home" onclick="goP('home')"><div class="ico">🏠</div><div class="lbl">خانه</div></button>
+  <button class="bni" id="bn-cal" onclick="goP('cal')"><div class="ico">📅</div><div class="lbl">تقویم</div></button>
+  <button class="bni" id="bn-habit" onclick="goP('habit')"><div class="ico">⚡</div><div class="lbl">عادت‌ها</div></button>
+  <button class="bni" id="bn-plan" onclick="goP('plan')"><div class="ico">📋</div><div class="lbl">برنامه‌ام</div></button>
+  <button class="bni" id="bn-set" onclick="goP('set')"><div class="ico">⚙️</div><div class="lbl">تنظیمات</div></button>
+</nav>
+
+<!-- ═══════════════════════════ MODAL ═══════════════════════════ -->
+<div class="modal-bg" id="modalBg" onclick="closeMod(event)">
+  <div class="modal"><div class="mtitle"><span id="mTitle">عنوان</span><button class="mclose" onclick="closeMod()">✕</button></div><div id="mBody"></div></div>
+</div>
+
+<!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
+<script src="js/data.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/habits.js"></script>
+<script src="js/plan.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
