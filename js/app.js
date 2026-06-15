@@ -99,6 +99,16 @@ function getTodayIndex() {
   return Math.max(0, diff);
 }
 
+// ── TODAY BANNER (خانه) ──
+function updTodayBanner() {
+  const idx = getTodayIndex();
+  const pd = getPD(idx);
+  const dow = gDow(idx);
+  const year = pd.m === 'فروردین' ? 1406 : 1405;
+  const txt = document.getElementById('todayTxt');
+  if (txt) txt.textContent = `امروز — ${DN[dow]} ${pd.d} ${pd.m} ${year}`;
+}
+
 // ── OVERALL PROGRESS ──
 function updOverall() {
   const total = getTotalDays();
@@ -292,7 +302,7 @@ function renderDet(i) {
   if (isDone) {
     const donTag = document.createElement('span');
     donTag.className='dtag'; donTag.style.cssText='background:rgba(34,201,104,.12);color:var(--grn);border-color:rgba(34,201,104,.28)';
-    donTag.textContent='✅ روز کامل';
+    donTag.textContent='✅ روز کامل جذاب';
     dtags.appendChild(donTag);
   }
 
@@ -313,7 +323,7 @@ function renderDet(i) {
   if (gym) {
     const gymPlanBtn = document.createElement('button');
     gymPlanBtn.className = 'tbtn tgy2';
-    gymPlanBtn.textContent = '💪 برنامه باشگاه';
+    gymPlanBtn.textContent = '💪 برنامه باشگاه رونی کلمن';
     gymPlanBtn.onclick = () => openGymPlan(i);
     tbar.appendChild(gymPlanBtn);
   }
@@ -347,7 +357,7 @@ function renderDet(i) {
       <input class="ainp" id="anew_time_${i}" placeholder="ساعت (مثلاً ۸:۰۰)">
     </div>
     <input class="ainp" id="anew_t_${i}" placeholder="عنوان کار...">
-    <input class="ainp" id="anew_s_${i}" placeholder="توضیح (اختیاری ولی ریز بیده)">
+    <input class="ainp" id="anew_s_${i}" placeholder="توضیح (اختیاری ریز بدی بد نی)">
     <div class="arbtns">
       <button class="addbtn" onclick="addItem(${i})">اضافه کن</button>
       <button class="ccl" onclick="togAddRow(${i})">انصراف</button>
@@ -361,12 +371,12 @@ function renderDet(i) {
     const tb = document.createElement('div');
     tb.className = 'tb' + (isDoneItem ? ' ck' : '');
     tb.id = 'tb_' + i + '_' + k;
-    tb.style.cursor = 'pointer';
 
     const tbc = document.createElement('div');
     tbc.className = 'tbc';
     tbc.id = 'tbc_' + i + '_' + k;
     tbc.textContent = isDoneItem ? '✓' : '';
+    tbc.onclick = () => togTB(i, k, tbc);
 
     const tbi = document.createElement('div');
     tbi.className = 'tbi';
@@ -391,10 +401,7 @@ function renderDet(i) {
     const delbtn = document.createElement('button');
     delbtn.className = 'delbtn';
     delbtn.textContent = '✕';
-    delbtn.onclick = (e) => { e.stopPropagation(); delItem(i, k); };
-
-    // کل ردیف کلیک‌پذیر — نه فقط دایره
-    tb.onclick = () => togTB(i, k, tbc);
+    delbtn.onclick = () => delItem(i, k);
 
     tb.appendChild(tbc); tb.appendChild(tbi); tb.appendChild(delbtn);
     left.appendChild(tb);
@@ -413,7 +420,7 @@ function renderDet(i) {
     if (gymPlan.length > 0) {
       const gd = document.createElement('div');
       gd.className = 'gmd';
-      const gmdt = document.createElement('div'); gmdt.className='gmdt'; gmdt.textContent='💪 برنامه باشگاه رونی کلمن';
+      const gmdt = document.createElement('div'); gmdt.className='gmdt'; gmdt.textContent='💪 برنامه باشگاه';
       const gmdg = document.createElement('div'); gmdg.className='gmdg';
       gymPlan.forEach(ex => {
         const gmdm = document.createElement('div'); gmdm.className='gmdm';
@@ -461,11 +468,11 @@ function renderDet(i) {
     const pi = document.createElement('div');
     pi.className = 'tb' + (done2 ? ' ck' : '');
     pi.id = 'rc_' + i + '_' + k;
-    pi.style.cursor = 'pointer';
 
     const tbc2 = document.createElement('div');
     tbc2.className = 'tbc';
     tbc2.textContent = done2 ? '✓' : '';
+    tbc2.onclick = () => togRC(i, k, tbc2);
 
     const tbi2 = document.createElement('div');
     tbi2.className = 'tbi';
@@ -475,10 +482,7 @@ function renderDet(i) {
 
     const del2 = document.createElement('button');
     del2.className = 'delbtn'; del2.textContent='✕';
-    del2.onclick = (e) => { e.stopPropagation(); delCheckItem(i, k); };
-
-    // کل ردیف چک‌لیست کلیک‌پذیر
-    pi.onclick = () => togRC(i, k, tbc2);
+    del2.onclick = () => delCheckItem(i, k);
 
     pi.appendChild(tbc2); pi.appendChild(tbi2); pi.appendChild(del2);
     checklistWrap.appendChild(pi);
@@ -518,7 +522,7 @@ function renderDet(i) {
   const donebtn = document.createElement('button');
   donebtn.className = 'donebtn ' + (isDone ? 'on' : 'off');
   donebtn.id = 'donebtn_' + i;
-  donebtn.textContent = isDone ? '✅ روز کامل شد!' : '✓ روز رو کامل کن';
+  donebtn.textContent = isDone ? '✅ روز کامل شد!' : '✓ روز رو کامل کن خوشتیپ';
   donebtn.onclick = () => togDone(i);
   right.appendChild(donebtn);
 
@@ -638,16 +642,14 @@ function addCheckItem(i) {
 
 function delCheckItem(i, k) {
   const cr = JSON.parse(localStorage.getItem('cr_' + i) || '[]');
-  if (k < 0 || k >= cr.length) return;
-  // اول done stateها رو شیفت بده، بعد splice کن
-  for (let j = k; j < cr.length - 1; j++) {
-    const next = localStorage.getItem('rc_' + i + '_' + (j + 1));
+  cr.splice(k, 1);
+  localStorage.setItem('cr_' + i, JSON.stringify(cr));
+  // clear done state
+  for (let j = k; j < cr.length + 1; j++) {
+    const next = localStorage.getItem('rc_' + i + '_' + (j+1));
     if (next !== null) localStorage.setItem('rc_' + i + '_' + j, next);
     else localStorage.removeItem('rc_' + i + '_' + j);
   }
-  localStorage.removeItem('rc_' + i + '_' + (cr.length - 1));
-  cr.splice(k, 1);
-  localStorage.setItem('cr_' + i, JSON.stringify(cr));
   renderDet(i);
 }
 
@@ -699,7 +701,7 @@ function togDone(i) {
   const btn = document.getElementById('donebtn_' + i);
   if (btn) {
     btn.className = 'donebtn ' + (cur ? 'off' : 'on');
-    btn.textContent = cur ? '✓ روز رو کامل کن' : '✅ روز کامل شد!';
+    btn.textContent = cur ? '✓ روز رو کامل کن' : '✅ روز کامل شد خوشتیپ!';
   }
   if (!cur) spawnConf(btn || document.body);
   updOverall();
@@ -732,21 +734,11 @@ function addItem(i) {
 function delItem(i, k) {
   const gym = isGym(i);
   const party = isCafe(i);
-  // تعداد واقعی آیتم‌های ثابت (gym ممکنه چند تا exercise داشته باشه)
-  const gymCount = gym ? JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]').length : 0;
-  const staticCount = gymCount + (party ? 1 : 0);
-  if (k < staticCount) return; // آیتم‌های ثابت رو نمیشه حذف کرد
+  const gymPlan = gym ? JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]') : [];
+  const staticCount = gymPlan.length + (party ? 1 : 0);
+  if (k < staticCount) return; // آیتم‌های ثابت باشگاه/خوشگذرونی
   const ct = JSON.parse(localStorage.getItem('ct_' + i) || '[]');
-  const ctIndex = k - staticCount;
-  if (ctIndex < 0 || ctIndex >= ct.length) return;
-  // پاک کردن وضعیت done برای این آیتم و شیفت دادن بقیه
-  for (let j = ctIndex; j < ct.length - 1; j++) {
-    const next = localStorage.getItem('tb_' + i + '_' + (staticCount + j + 1));
-    if (next !== null) localStorage.setItem('tb_' + i + '_' + (staticCount + j), next);
-    else localStorage.removeItem('tb_' + i + '_' + (staticCount + j));
-  }
-  localStorage.removeItem('tb_' + i + '_' + (staticCount + ct.length - 1));
-  ct.splice(ctIndex, 1);
+  ct.splice(k - staticCount, 1);
   localStorage.setItem('ct_' + i, JSON.stringify(ct));
   renderDet(i);
 }
@@ -803,7 +795,7 @@ function importData() {
 }
 
 function resetAll() {
-  if (confirm(' ناموسن همه داده‌ها پاک بشن؟') && confirm('مطمئنی؟ برگشتی نیستاااا!')) { localStorage.clear(); location.reload(); }
+  if (confirm('همه داده‌ها پاک بشن؟') && confirm('مطمئنی؟ برگشتی نیست!')) { localStorage.clear(); location.reload(); }
 }
 
 function openMod() { document.getElementById('modalBg').classList.add('open'); }
@@ -822,18 +814,19 @@ function initTilt() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  buildWater(); buildMonths(); updOverall(); updQ(false); startCD(); initCanvas(); initTilt(); updTodayTxt();
+  buildWater(); buildMonths(); updOverall(); updQ(false); startCD(); initCanvas(); initTilt(); updTodayBanner();
   setInterval(() => {
     const dots=document.getElementById('qdts');
     if (dots) dots.querySelectorAll('.qdot').forEach((d,i)=>d.classList.toggle('a',i===qI%Math.min(QQ.length,12)));
   }, 1000);
+  // هر دقیقه چک کن که آیا روز عوض شده — اگه عوض شده بود، بنر "امروز" و تقویم رو آپدیت کن
+  let lastDayIdx = getTodayIndex();
+  setInterval(() => {
+    const idx = getTodayIndex();
+    if (idx !== lastDayIdx) {
+      lastDayIdx = idx;
+      updTodayBanner();
+      buildMonths();
+    }
+  }, 60000);
 });
-
-// ── UPDATE TODAY TEXT ON HOME ──
-function updTodayTxt() {
-  const idx = getTodayIndex();
-  const pd = getPD(idx);
-  const dow = gDow(idx);
-  const el = document.getElementById('todayTxt');
-  if (el) el.textContent = 'امروز — ' + DN[dow] + ' ' + pd.d + ' ' + pd.m + ' ۱۴۰۵';
-}
