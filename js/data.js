@@ -131,3 +131,10 @@ const DFLTPLAN = [
   {id:'pb2', title:'💪 تمرین و ورزش', items:[]},
   {id:'pb3', title:'🎯 اهداف امروز', items:[]},
 ];
+
+const DFLTHBT = [
+  {id:'h1', name:'ورزش', ico:'💪', sub:'حداقل ۲۰ دقیقه'},
+  {id:'h2', name:'مدیتیشن', ico:'🧘', sub:'۱۰ دقیقه آرامش'},
+  {id:'h3', name:'مطالعه', ico:'📚', sub:'حداقل نیم ساعت کتاب'},
+  {id:'h4', name:'آب کافی', ico:'💧', sub:'۸ لیوان در روز'},
+];
