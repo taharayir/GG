@@ -99,6 +99,16 @@ function getTodayIndex() {
   return Math.max(0, diff);
 }
 
+// ── TODAY BANNER (خانه) ──
+function updTodayBanner() {
+  const idx = getTodayIndex();
+  const pd = getPD(idx);
+  const dow = gDow(idx);
+  const year = pd.m === 'فروردین' ? 1406 : 1405;
+  const txt = document.getElementById('todayTxt');
+  if (txt) txt.textContent = `امروز — ${DN[dow]} ${pd.d} ${pd.m} ${year}`;
+}
+
 // ── OVERALL PROGRESS ──
 function updOverall() {
   const total = getTotalDays();
@@ -357,7 +367,44 @@ function renderDet(i) {
 
   const {L} = getSched(i);
   L.forEach((item, k) => {
-    left.appendChild(_makePlanRow(i, k, item));
+    const isDoneItem = localStorage.getItem('tb_' + i + '_' + k) === '1';
+    const tb = document.createElement('div');
+    tb.className = 'tb' + (isDoneItem ? ' ck' : '');
+    tb.id = 'tb_' + i + '_' + k;
+
+    const tbc = document.createElement('div');
+    tbc.className = 'tbc';
+    tbc.id = 'tbc_' + i + '_' + k;
+    tbc.textContent = isDoneItem ? '✓' : '';
+    tbc.onclick = () => togTB(i, k, tbc);
+
+    const tbi = document.createElement('div');
+    tbi.className = 'tbi';
+
+    if (item.time || item.e) {
+      const tt = document.createElement('div');
+      tt.className = 'ttime';
+      tt.textContent = (item.e ? item.e + ' ' : '') + (item.time || '');
+      tbi.appendChild(tt);
+    }
+    const tbt = document.createElement('div');
+    tbt.className = 'tbt';
+    tbt.textContent = item.t;
+    tbi.appendChild(tbt);
+    if (item.s) {
+      const tbs = document.createElement('div');
+      tbs.className = 'tbs';
+      tbs.textContent = item.s;
+      tbi.appendChild(tbs);
+    }
+
+    const delbtn = document.createElement('button');
+    delbtn.className = 'delbtn';
+    delbtn.textContent = '✕';
+    delbtn.onclick = () => delItem(i, k);
+
+    tb.appendChild(tbc); tb.appendChild(tbi); tb.appendChild(delbtn);
+    left.appendChild(tb);
   });
 
   if (L.length === 0) {
@@ -414,7 +461,31 @@ function renderDet(i) {
   const checklistWrap = document.createElement('div');
   checklistWrap.id = 'checklist_' + i;
   cr.forEach((item, k) => {
-    checklistWrap.appendChild(_makeCheckRow(i, k, item));
+    const parts = item.split('|');
+    const txt = parts[0] || item;
+    const sub = parts[1] || '';
+    const done2 = localStorage.getItem('rc_' + i + '_' + k) === '1';
+    const pi = document.createElement('div');
+    pi.className = 'tb' + (done2 ? ' ck' : '');
+    pi.id = 'rc_' + i + '_' + k;
+
+    const tbc2 = document.createElement('div');
+    tbc2.className = 'tbc';
+    tbc2.textContent = done2 ? '✓' : '';
+    tbc2.onclick = () => togRC(i, k, tbc2);
+
+    const tbi2 = document.createElement('div');
+    tbi2.className = 'tbi';
+    const tbt2 = document.createElement('div'); tbt2.className='tbt'; tbt2.textContent=txt;
+    tbi2.appendChild(tbt2);
+    if (sub) { const tbs2=document.createElement('div'); tbs2.className='tbs'; tbs2.textContent=sub; tbi2.appendChild(tbs2); }
+
+    const del2 = document.createElement('button');
+    del2.className = 'delbtn'; del2.textContent='✕';
+    del2.onclick = () => delCheckItem(i, k);
+
+    pi.appendChild(tbc2); pi.appendChild(tbi2); pi.appendChild(del2);
+    checklistWrap.appendChild(pi);
   });
   right.appendChild(checklistWrap);
 
@@ -582,95 +653,6 @@ function delCheckItem(i, k) {
   renderDet(i);
 }
 
-// ── HELPER: ردیف آیتم برنامه روز ──
-function _makePlanRow(dayI, itemK, item) {
-  const isDoneItem = localStorage.getItem('tb_' + dayI + '_' + itemK) === '1';
-  const tb = document.createElement('div');
-  tb.className = 'tb' + (isDoneItem ? ' ck' : '');
-  tb.id = 'tb_' + dayI + '_' + itemK;
-
-  const tbc = document.createElement('div');
-  tbc.className = 'tbc';
-  tbc.textContent = isDoneItem ? '✓' : '';
-  tbc.onclick = (function(di, ki) {
-    return function() { togTB(di, ki, this); };
-  })(dayI, itemK);
-
-  const tbi = document.createElement('div');
-  tbi.className = 'tbi';
-
-  if (item.time || item.e) {
-    const tt = document.createElement('div');
-    tt.className = 'ttime';
-    tt.textContent = (item.e ? item.e + ' ' : '') + (item.time || '');
-    tbi.appendChild(tt);
-  }
-  const tbt = document.createElement('div');
-  tbt.className = 'tbt';
-  tbt.textContent = item.t;
-  tbi.appendChild(tbt);
-  if (item.s) {
-    const tbs = document.createElement('div');
-    tbs.className = 'tbs';
-    tbs.textContent = item.s;
-    tbi.appendChild(tbs);
-  }
-
-  const delbtn = document.createElement('button');
-  delbtn.className = 'delbtn';
-  delbtn.textContent = '✕';
-  delbtn.onclick = (function(di, ki) {
-    return function(e) {
-      e.stopPropagation();
-      if (confirm('این آیتم حذف بشه؟')) delItem(di, ki);
-    };
-  })(dayI, itemK);
-
-  tb.appendChild(tbc); tb.appendChild(tbi); tb.appendChild(delbtn);
-  return tb;
-}
-
-// ── HELPER: ردیف آیتم چک‌لیست ──
-function _makeCheckRow(dayI, itemK, rawItem) {
-  const parts = rawItem.split('|');
-  const txt = parts[0] || rawItem;
-  const sub = parts[1] || '';
-  const isDone = localStorage.getItem('rc_' + dayI + '_' + itemK) === '1';
-
-  const pi = document.createElement('div');
-  pi.className = 'tb' + (isDone ? ' ck' : '');
-  pi.id = 'rc_' + dayI + '_' + itemK;
-
-  const tbc2 = document.createElement('div');
-  tbc2.className = 'tbc';
-  tbc2.textContent = isDone ? '✓' : '';
-  tbc2.onclick = (function(di, ki) {
-    return function() { togRC(di, ki, this); };
-  })(dayI, itemK);
-
-  const tbi2 = document.createElement('div');
-  tbi2.className = 'tbi';
-  const tbt2 = document.createElement('div'); tbt2.className = 'tbt'; tbt2.textContent = txt;
-  tbi2.appendChild(tbt2);
-  if (sub) {
-    const tbs2 = document.createElement('div'); tbs2.className = 'tbs'; tbs2.textContent = sub;
-    tbi2.appendChild(tbs2);
-  }
-
-  const del2 = document.createElement('button');
-  del2.className = 'delbtn'; del2.textContent = '✕';
-  del2.onclick = (function(di, ki) {
-    return function(e) {
-      e.stopPropagation();
-      if (confirm('این آیتم از چک‌لیست حذف بشه؟')) delCheckItem(di, ki);
-    };
-  })(dayI, itemK);
-
-  pi.appendChild(tbc2); pi.appendChild(tbi2); pi.appendChild(del2);
-  return pi;
-}
-
-// ── TOGGLE PLAN ITEM ──
 function togTB(i, k, el) {
   const cur = localStorage.getItem('tb_' + i + '_' + k) === '1';
   localStorage.setItem('tb_' + i + '_' + k, cur ? '0' : '1');
@@ -752,22 +734,12 @@ function addItem(i) {
 function delItem(i, k) {
   const gym = isGym(i);
   const party = isCafe(i);
-  const gymPlan = JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]');
-  const gymCount = gym ? gymPlan.length : 0;
-  const staticCount = gymCount + (party ? 1 : 0);
-  if (k < staticCount) return;
+  const gymPlan = gym ? JSON.parse(localStorage.getItem('gym_plan_' + i) || '[]') : [];
+  const staticCount = gymPlan.length + (party ? 1 : 0);
+  if (k < staticCount) return; // آیتم‌های ثابت باشگاه/خوشگذرونی
   const ct = JSON.parse(localStorage.getItem('ct_' + i) || '[]');
-  const ctIdx = k - staticCount;
-  if (ctIdx < 0 || ctIdx >= ct.length) return;
-  ct.splice(ctIdx, 1);
+  ct.splice(k - staticCount, 1);
   localStorage.setItem('ct_' + i, JSON.stringify(ct));
-  // shift کردن تیک‌ها
-  const newTotal = staticCount + ct.length;
-  for (let j = k; j < newTotal + 1; j++) {
-    const next = localStorage.getItem('tb_' + i + '_' + (j + 1));
-    if (next !== null) localStorage.setItem('tb_' + i + '_' + j, next);
-    else localStorage.removeItem('tb_' + i + '_' + j);
-  }
   renderDet(i);
 }
 
@@ -842,9 +814,19 @@ function initTilt() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  buildWater(); buildMonths(); updOverall(); updQ(false); startCD(); initCanvas(); initTilt();
+  buildWater(); buildMonths(); updOverall(); updQ(false); startCD(); initCanvas(); initTilt(); updTodayBanner();
   setInterval(() => {
     const dots=document.getElementById('qdts');
     if (dots) dots.querySelectorAll('.qdot').forEach((d,i)=>d.classList.toggle('a',i===qI%Math.min(QQ.length,12)));
   }, 1000);
+  // هر دقیقه چک کن که آیا روز عوض شده — اگه عوض شده بود، بنر "امروز" و تقویم رو آپدیت کن
+  let lastDayIdx = getTodayIndex();
+  setInterval(() => {
+    const idx = getTodayIndex();
+    if (idx !== lastDayIdx) {
+      lastDayIdx = idx;
+      updTodayBanner();
+      buildMonths();
+    }
+  }, 60000);
 });
